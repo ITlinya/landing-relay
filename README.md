@@ -37,7 +37,7 @@
 ### 第一步：落地机
 
 ```bash
-curl -fsSLO https://raw.githubusercontent.com/<你的仓库>/main/landing-relay.sh
+curl -fsSLO https://raw.githubusercontent.com/ITlinya/landing-relay/main/landing-relay.sh
 bash landing-relay.sh --upstream=你的线路机IP
 ```
 
