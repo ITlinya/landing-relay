@@ -1,5 +1,7 @@
 # landing-relay
 
+服务端搭建参考：https://github.com/livingfree2023/xtls-vless-reality-nokey
+
 落地服务器（出口机）一键部署脚本。用来给 VLESS-REALITY 节点加一层干净 IP 的出口。
 
 很多线路服务器的情况是：到大陆的线路很好，但 IP 纯净度差，Google 老是要验证码、流媒体解锁不了、部分站点直接拒绝。而纯净 IP 的机器往往线路绕、延迟高，直连体验又不好。
