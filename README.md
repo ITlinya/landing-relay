@@ -123,37 +123,6 @@ bash landing-relay.sh --upstream=新IP
 
 线路机侧的 jq 变换同样是幂等的：先按 tag 过滤掉旧的 `landing-out` 出站和相关路由规则再追加，重复执行不会堆积重复项。
 
-## 两个容易踩的坑
-
-如果你打算手写配置而不用这个脚本，这两点值得注意。它们都是我读 nokey 脚本源码时发现的。
-
-**一、nokey 生成的 config.json 含 JSON 注释**
-
-配置模板里有一段被 `/* */` 包起来的路由规则示例。Xray 自己能解析，但 `jq` 会直接报 parse error。所以用 jq 改配置之前必须先剥掉注释：
-
-```bash
-perl -0pe 's{/\*.*?\*/}{}gs' "$CFG" > /tmp/xray.clean.json
-```
-
-脚本生成的线路机命令里已经包含这一步。
-
-**二、freedom 出站的 domainStrategy 不在 settings 里**
-
-它现在归 `streamSettings.sockopt` 管：
-
-```json
-{
-  "tag": "direct",
-  "protocol": "freedom",
-  "settings": {},
-  "streamSettings": {
-    "sockopt": { "domainStrategy": "UseIPv4" }
-  }
-}
-```
-
-写在 `settings` 下面不会报错，只会被静默忽略，出口可能意外走 IPv6。默认用 `UseIPv4` 而不是 `ForceIPv4`，因为 `Use*` 在解析失败时会退回 `AsIs`，而 `Force*` 会直接断连——对出口机来说，退化比中断更可接受。
-
 ## 内核调优
 
 脚本会写入 `/etc/sysctl.d/99-landing-relay.conf`，启用 BBR + fq，放大 TCP 缓冲区，并把 Xray 的 `LimitNOFILE` 提到 1048576。老内核不支持 BBR 时会给出警告但不影响转发功能。
@@ -183,8 +152,4 @@ bash landing-relay.sh --uninstall
 
 移除防火墙规则、systemd unit、sysctl 配置和状态文件，并调用 Xray 官方脚本卸载 Xray 本体。
 
-## 验证状态
 
-已验证：IP 校验（IPv4 / CIDR / IPv6 / 非法输入）、PSK 长度校验、防火墙规则生成顺序（用 mock iptables 做 dry-run）、渲染出的落地机配置与线路机 patch 命令均为合法 JSON、jq 变换的幂等性。
-
-未验证：脚本在真实 Debian 12 + Xray 环境下的端到端运行，包括 systemd 服务启停和两跳链路实际连通性。首次部署建议留意输出，有报错欢迎提 issue 附上日志。
